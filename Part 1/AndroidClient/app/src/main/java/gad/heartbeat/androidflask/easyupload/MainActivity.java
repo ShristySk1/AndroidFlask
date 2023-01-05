@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        String postUrl = "http://" + ipv4Address + ":" + portNumber + "/";
+        String postUrl = "http://" + ipv4Address + ":" + portNumber + "/upload";
 
         MultipartBody.Builder multipartBodyBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
 
@@ -111,15 +111,17 @@ public class MainActivity extends AppCompatActivity {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             try {
                 // Read BitMap by file path.
-                Bitmap bitmap = BitmapFactory.decodeFile(selectedImagesPaths.get(i), options);
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                Log.d("testlink", "connectServer: "+selectedImagesPaths.get(i));
+//                Bitmap bitmap = BitmapFactory.decodeFile(selectedImagesPaths.get(i), options);
+//                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
             }catch(Exception e){
+                Log.d("testimage", "connectServer: "+e.getLocalizedMessage());
                 responseText.setText("Please Make Sure the Selected File is an Image.");
                 return;
             }
             byte[] byteArray = stream.toByteArray();
 
-            multipartBodyBuilder.addFormDataPart("image" + i, "Android_Flask_" + i + ".jpg", RequestBody.create(MediaType.parse("image/*jpg"), byteArray));
+            multipartBodyBuilder.addFormDataPart("files" , "Android_Flask_" + i + ".jpg", RequestBody.create(MediaType.parse("image/*jpg"), byteArray));
         }
 
         RequestBody postBodyImage = multipartBodyBuilder.build();
@@ -183,7 +185,14 @@ public class MainActivity extends AppCompatActivity {
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), SELECT_MULTIPLE_IMAGES);
     }
-
+    public String getRealPathFromURI(Uri contentUri)
+    {
+        String[] proj = { MediaStore.Audio.Media.DATA };
+        Cursor cursor = managedQuery(contentUri, proj, null, null, null);
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column_index);
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         try {
@@ -192,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
                 String currentImagePath;
                 selectedImagesPaths = new ArrayList<>();
                 TextView numSelectedImages = findViewById(R.id.numSelectedImages);
+
                 if (data.getData() != null) {
                     Uri uri = data.getData();
                     currentImagePath = getPath(getApplicationContext(), uri);
